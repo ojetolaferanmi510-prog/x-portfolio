@@ -21,7 +21,23 @@
       delete options.token;
     }
 
-    const res = await fetch(url, { ...options, headers });
+    // Avoid setting Content-Type on FormData (browser must set boundary)
+    if (options.body instanceof FormData) {
+      delete headers['Content-Type'];
+    }
+
+    let res;
+    try {
+      res = await fetch(url, { ...options, headers });
+    } catch (networkErr) {
+      const err = new Error(
+        'Could not reach the API. Check your connection or try again later.'
+      );
+      err.cause = networkErr;
+      err.status = 0;
+      throw err;
+    }
+
     let data = null;
     const text = await res.text();
     if (text) {
@@ -33,7 +49,9 @@
     }
 
     if (!res.ok) {
-      const err = new Error((data && data.error) || res.statusText || 'Request failed');
+      const err = new Error(
+        (data && (data.error || data.message)) || res.statusText || 'Request failed'
+      );
       err.status = res.status;
       err.data = data;
       throw err;

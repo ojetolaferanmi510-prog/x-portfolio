@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <meta name="api-base" content="https://x-portfolio-1.onrender.com" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Contact — hire form for project inquiries." />
@@ -67,23 +68,23 @@
                 <label for="projectType">Project type</label>
                 <select id="projectType" name="projectType" required>
                   <option value="" disabled selected>Select one</option>
-                  <option>Web3 / DeFi</option>
-                  <option>Fintech</option>
-                  <option>E-commerce</option>
-                  <option>SaaS / Utility</option>
-                  <option>Landing / Marketing</option>
-                  <option>Other</option>
+                  <option value="Web3 / DeFi">Web3 / DeFi</option>
+                  <option value="Fintech">Fintech</option>
+                  <option value="E-commerce">E-commerce</option>
+                  <option value="SaaS / Utility">SaaS / Utility</option>
+                  <option value="Landing / Marketing">Landing / Marketing</option>
+                  <option value="Other">Other</option>
                 </select>
               </div>
               <div class="field">
                 <label for="budget">Budget range</label>
                 <select id="budget" name="budget">
                   <option value="">Prefer not to say</option>
-                  <option>Under $1k</option>
-                  <option>$1k – $3k</option>
-                  <option>$3k – $8k</option>
-                  <option>$8k – $15k</option>
-                  <option>$15k+</option>
+                  <option value="Under $1k">Under $1k</option>
+                  <option value="$1k – $3k">$1k – $3k</option>
+                  <option value="$3k – $8k">$3k – $8k</option>
+                  <option value="$8k – $15k">$8k – $15k</option>
+                  <option value="$15k+">$15k+</option>
                 </select>
               </div>
             </div>
@@ -102,14 +103,21 @@
             <!-- Honeypot: leave empty -->
             <div class="hp-field" aria-hidden="true">
               <label for="website">Website</label>
-              <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+              <input
+                id="website"
+                name="website"
+                type="text"
+                tabindex="-1"
+                autocomplete="off"
+                value=""
+              />
             </div>
 
             <div class="mt-2" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center">
               <button class="btn btn-primary" type="submit" id="submit-btn">Send message</button>
               <span class="text-dim" style="font-size: 0.8rem">Usually replies within 1–2 days.</span>
             </div>
-            <div id="form-status" class="form-status" role="status"></div>
+            <div id="form-status" class="form-status" role="status" aria-live="polite"></div>
           </form>
         </div>
       </section>
@@ -135,6 +143,7 @@
       const form = document.getElementById('contact-form');
       const statusEl = document.getElementById('form-status');
       const btn = document.getElementById('submit-btn');
+      const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -142,17 +151,36 @@
         statusEl.textContent = '';
 
         const payload = {
-          name: form.name.value.trim(),
-          email: form.email.value.trim(),
-          projectType: form.projectType.value,
-          budget: form.budget.value,
-          message: form.message.value.trim(),
-          website: form.website.value,
+          name: String(form.name.value || '').trim(),
+          email: String(form.email.value || '').trim().toLowerCase(),
+          projectType: String(form.projectType.value || '').trim(),
+          budget: String(form.budget.value || '').trim(),
+          message: String(form.message.value || '').trim(),
+          website: String(form.website.value || '').trim(),
         };
 
         if (!payload.name || !payload.email || !payload.projectType || !payload.message) {
           ui.showStatus(statusEl, 'err', 'Please fill in name, email, project type, and message.');
           return;
+        }
+
+        if (!EMAIL_RE.test(payload.email)) {
+          ui.showStatus(statusEl, 'err', 'Please enter a valid email address.');
+          form.email.focus();
+          return;
+        }
+
+        if (!window.API_BASE && location.protocol !== 'file:') {
+          const isLocal =
+            location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+          if (!isLocal) {
+            ui.showStatus(
+              statusEl,
+              'err',
+              'API is not configured on this page. Missing api-base.'
+            );
+            return;
+          }
         }
 
         btn.disabled = true;
@@ -167,11 +195,12 @@
           );
         } catch (err) {
           console.error(err);
-          ui.showStatus(
-            statusEl,
-            'err',
-            err.message || 'Something went wrong. Please try again.'
-          );
+          let msg = 'Something went wrong. Please try again.';
+          if (err && err.message) msg = err.message;
+          if (err && err.status === 429) {
+            msg = 'Too many messages. Please try again in a few minutes.';
+          }
+          ui.showStatus(statusEl, 'err', msg);
         } finally {
           btn.disabled = false;
           btn.textContent = 'Send message';

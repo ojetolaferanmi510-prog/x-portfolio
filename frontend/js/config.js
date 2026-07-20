@@ -10,12 +10,18 @@
   const fromWindow =
     typeof window.__API_BASE__ === 'string' ? window.__API_BASE__.trim() : '';
 
+  const host = location.hostname;
   const isLocal =
-    location.hostname === 'localhost' ||
-    location.hostname === '127.0.0.1' ||
+    host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '[::1]' ||
     location.protocol === 'file:';
 
-  const fallback = isLocal ? 'http://localhost:5000' : '';
+  // Prefer explicit overrides; local dev falls back to Express on :5000
+  let base = fromWindow || fromMeta || (isLocal ? 'http://localhost:5000' : '');
 
-  window.API_BASE = (fromWindow || fromMeta || fallback).replace(/\/$/, '');
+  // Strip trailing slash so paths like /api/... join cleanly
+  base = String(base || '').replace(/\/+$/, '');
+
+  window.API_BASE = base;
 })();
