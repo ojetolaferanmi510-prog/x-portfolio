@@ -1,0 +1,48 @@
+# Render Blueprint — portfolio API
+# Dashboard: New → Blueprint → connect this repo
+# Or create a Web Service manually with the same settings below.
+#
+# After first deploy:
+# 1. Copy the service URL (https://xxxx.onrender.com)
+# 2. Set CLIENT_URL to your Vercel domain(s)
+# 3. Put that API URL in frontend meta api-base (or Vercel env + build step)
+# 4. Seed admin once: Render Shell → cd backend && npm run seed:admin
+
+services:
+  - type: web
+    name: x-portfolio-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5000"
+      # Comma-separated browser origins allowed by CORS
+      # Example: https://x-portfolio.vercel.app,http://localhost:5500
+      - key: CLIENT_URL
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_USER
+        sync: false
+      - key: ADMIN_PASS
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_TO
+        sync: false

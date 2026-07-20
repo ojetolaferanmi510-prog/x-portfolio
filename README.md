@@ -8,6 +8,9 @@ Dark Web3 portfolio with a public static frontend and an Express + MongoDB API (
 frontend/          # static HTML/CSS/JS + admin panel
 backend/           # Express REST API
 PLAN.md            # locked product plan
+DEPLOY.md          # exact Render + Vercel steps
+render.yaml        # Render Blueprint (API)
+vercel.json        # Vercel static output → frontend/
 ```
 
 ## Backend
@@ -88,9 +91,36 @@ Optional resume file: place PDF at `frontend/assets/resume.pdf`.
 - Hand-rolled CSS + DM Sans / JetBrains Mono
 - Mobile-first nav, project filters, contact honeypot
 
-## Deploy (later)
+## Deploy
 
-- Frontend → Vercel / Netlify  
-- Backend → Render  
-- DB → MongoDB Atlas  
-# x-portfolio
+Full checklist: **[DEPLOY.md](./DEPLOY.md)**
+
+| Piece | Host | Config |
+|-------|------|--------|
+| API | **Render** | `render.yaml` — Root Directory `backend`, build `npm install`, start `npm start`, health `/api/health` |
+| Site | **Vercel** | `vercel.json` — Output Directory `frontend`, no build |
+| DB | **MongoDB Atlas** | URI in Render env `MONGODB_URI` |
+
+**Render (manual if not using Blueprint)**
+
+- Root Directory: `backend`
+- Build: `npm install`
+- Start: `npm start`
+- Health Check Path: `/api/health`
+- Env: copy from `backend/.env.example` (`NODE_ENV=production`, `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL` = your Vercel URL, Cloudinary, Resend, `ADMIN_*`)
+
+**Vercel**
+
+- Framework: Other
+- Root: repo root (uses `vercel.json`)
+- Output Directory: `frontend`
+- After deploy: set `<meta name="api-base" content="https://YOUR-API.onrender.com" />` on pages, then put the Vercel origin in Render `CLIENT_URL`
+
+**Post-deploy**
+
+```bash
+# Render Shell (once)
+npm run seed:admin
+```
+
+Repo already on GitHub: `origin` → `https://github.com/ojetolaferanmi510-prog/x-portfolio.git` (branch `main`).
