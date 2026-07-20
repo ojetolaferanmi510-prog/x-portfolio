@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Admin login · Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/admin.css" />
+  </head>
+  <body class="admin">
+    <div class="login-wrap">
+      <form id="login-form" class="login-card" novalidate>
+        <p class="section-eyebrow">Admin</p>
+        <h1>Sign in</h1>
+        <p class="sub">Protected area — not linked from the public site.</p>
+
+        <div class="field">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required />
+        </div>
+        <div class="field mt-2">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+        </div>
+
+        <button class="btn btn-primary mt-2" type="submit" id="login-btn" style="width: 100%">
+          Login
+        </button>
+        <div id="form-status" class="form-status" role="status"></div>
+        <p class="text-dim mt-2" style="font-size: 0.8rem; text-align: center">
+          <a href="../index.html">← Back to site</a>
+        </p>
+      </form>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/admin.js"></script>
+    <script>
+      if (adminAuth.getToken()) {
+        location.replace('dashboard.html');
+      }
+
+      const form = document.getElementById('login-form');
+      const statusEl = document.getElementById('form-status');
+      const btn = document.getElementById('login-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusEl.className = 'form-status';
+        const username = form.username.value.trim();
+        const password = form.password.value;
+        if (!username || !password) {
+          ui.showStatus(statusEl, 'err', 'Username and password required.');
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = 'Signing in…';
+        try {
+          const data = await api.login(username, password);
+          adminAuth.setSession(data.token, data.admin);
+          location.href = 'dashboard.html';
+        } catch (err) {
+          ui.showStatus(statusEl, 'err', err.message || 'Login failed');
+          btn.disabled = false;
+          btn.textContent = 'Login';
+        }
+      });
+    </script>
+  </body>
+</html>

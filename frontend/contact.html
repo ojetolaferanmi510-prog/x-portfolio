@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Contact — hire form for project inquiries." />
+    <title>Contact · Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <a class="logo" href="index.html">oj<span>.</span>dev</a>
+        <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false">
+          <span></span>
+        </button>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html" data-nav="home">Home</a>
+          <a href="about.html" data-nav="about">About</a>
+          <a href="work.html" data-nav="work">Work</a>
+          <a href="contact.html" data-nav="contact" class="btn btn-primary btn-sm nav-cta">Hire me</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <div class="container">
+          <p class="section-eyebrow">Contact</p>
+          <h1>Let’s build something</h1>
+          <p>
+            Share a short brief — product type, rough budget, and timeline. I’ll reply as soon
+            as I can.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" style="padding-top: 1.5rem">
+        <div class="container">
+          <form id="contact-form" class="form-card reveal" novalidate>
+            <div class="form-grid two">
+              <div class="field">
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" autocomplete="name" required maxlength="100" />
+              </div>
+              <div class="field">
+                <label for="email">Email</label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  required
+                  maxlength="200"
+                />
+              </div>
+            </div>
+
+            <div class="form-grid two mt-2">
+              <div class="field">
+                <label for="projectType">Project type</label>
+                <select id="projectType" name="projectType" required>
+                  <option value="" disabled selected>Select one</option>
+                  <option>Web3 / DeFi</option>
+                  <option>Fintech</option>
+                  <option>E-commerce</option>
+                  <option>SaaS / Utility</option>
+                  <option>Landing / Marketing</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="budget">Budget range</label>
+                <select id="budget" name="budget">
+                  <option value="">Prefer not to say</option>
+                  <option>Under $1k</option>
+                  <option>$1k – $3k</option>
+                  <option>$3k – $8k</option>
+                  <option>$8k – $15k</option>
+                  <option>$15k+</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field mt-2">
+              <label for="message">Message</label>
+              <textarea
+                id="message"
+                name="message"
+                required
+                maxlength="5000"
+                placeholder="What are you building? Timeline? Any links?"
+              ></textarea>
+            </div>
+
+            <!-- Honeypot: leave empty -->
+            <div class="hp-field" aria-hidden="true">
+              <label for="website">Website</label>
+              <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+
+            <div class="mt-2" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center">
+              <button class="btn btn-primary" type="submit" id="submit-btn">Send message</button>
+              <span class="text-dim" style="font-size: 0.8rem">Usually replies within 1–2 days.</span>
+            </div>
+            <div id="form-status" class="form-status" role="status"></div>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="y"></span> Portfolio. Built with intent.</p>
+        <div class="footer-links">
+          <a href="about.html">About</a>
+          <a href="work.html">Work</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      document.getElementById('y').textContent = new Date().getFullYear();
+
+      const form = document.getElementById('contact-form');
+      const statusEl = document.getElementById('form-status');
+      const btn = document.getElementById('submit-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusEl.className = 'form-status';
+        statusEl.textContent = '';
+
+        const payload = {
+          name: form.name.value.trim(),
+          email: form.email.value.trim(),
+          projectType: form.projectType.value,
+          budget: form.budget.value,
+          message: form.message.value.trim(),
+          website: form.website.value,
+        };
+
+        if (!payload.name || !payload.email || !payload.projectType || !payload.message) {
+          ui.showStatus(statusEl, 'err', 'Please fill in name, email, project type, and message.');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        try {
+          await api.sendMessage(payload);
+          form.reset();
+          ui.showStatus(
+            statusEl,
+            'ok',
+            'Message sent. Thanks — I’ll get back to you soon.'
+          );
+        } catch (err) {
+          console.error(err);
+          ui.showStatus(
+            statusEl,
+            'err',
+            err.message || 'Something went wrong. Please try again.'
+          );
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Send message';
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Work — filterable project grid from live portfolio API." />
+    <title>Work · Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <a class="logo" href="index.html">oj<span>.</span>dev</a>
+        <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false">
+          <span></span>
+        </button>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html" data-nav="home">Home</a>
+          <a href="about.html" data-nav="about">About</a>
+          <a href="work.html" data-nav="work">Work</a>
+          <a href="contact.html" data-nav="contact" class="btn btn-primary btn-sm nav-cta">Hire me</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <div class="container">
+          <p class="section-eyebrow">Work</p>
+          <h1>Projects & experiments</h1>
+          <p>Filter by category. Every card opens a full case view with stack, links, and images.</p>
+        </div>
+      </section>
+
+      <section class="section" style="padding-top: 1.5rem">
+        <div class="container">
+          <div id="filters" class="filters" role="tablist" aria-label="Filter by tag">
+            <button type="button" class="filter-btn active" data-tag="">All</button>
+          </div>
+          <div id="work-grid" class="project-grid cols-3" aria-live="polite">
+            <div class="loading-state">Loading projects…</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="y"></span> Portfolio. Built with intent.</p>
+        <div class="footer-links">
+          <a href="about.html">About</a>
+          <a href="work.html">Work</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      document.getElementById('y').textContent = new Date().getFullYear();
+
+      const DEFAULT_TAGS = ['Web3', 'DeFi', 'Fintech', 'Utility', 'E-commerce'];
+      let allProjects = [];
+      let activeTag = '';
+
+      const grid = document.getElementById('work-grid');
+      const filtersEl = document.getElementById('filters');
+
+      function renderFilters(tags) {
+        const unique = [...new Set(tags.filter(Boolean))].sort((a, b) =>
+          a.localeCompare(b)
+        );
+        const list = unique.length ? unique : DEFAULT_TAGS;
+        filtersEl.innerHTML =
+          `<button type="button" class="filter-btn${activeTag ? '' : ' active'}" data-tag="">All</button>` +
+          list
+            .map(
+              (t) =>
+                `<button type="button" class="filter-btn${
+                  activeTag === t ? ' active' : ''
+                }" data-tag="${ui.escapeHtml(t)}">${ui.escapeHtml(t)}</button>`
+            )
+            .join('');
+      }
+
+      function renderGrid() {
+        const list = activeTag
+          ? allProjects.filter((p) => (p.tags || []).includes(activeTag))
+          : allProjects;
+
+        if (!list.length) {
+          grid.innerHTML =
+            '<div class="empty-state">No projects match this filter.</div>';
+          return;
+        }
+        grid.innerHTML = list.map(ui.projectCardHtml).join('');
+        grid.querySelectorAll('.reveal').forEach((el) => el.classList.add('visible'));
+      }
+
+      filtersEl.addEventListener('click', (e) => {
+        const btn = e.target.closest('.filter-btn');
+        if (!btn) return;
+        activeTag = btn.getAttribute('data-tag') || '';
+        filtersEl.querySelectorAll('.filter-btn').forEach((b) => {
+          b.classList.toggle('active', b === btn);
+        });
+        renderGrid();
+      });
+
+      (async function init() {
+        try {
+          const { projects } = await api.getProjects();
+          allProjects = projects || [];
+          const tags = allProjects.flatMap((p) => p.tags || []);
+          renderFilters(tags);
+          if (!allProjects.length) {
+            grid.innerHTML =
+              '<div class="empty-state">No projects published yet.</div>';
+            return;
+          }
+          renderGrid();
+        } catch (err) {
+          console.error(err);
+          grid.innerHTML =
+            '<div class="error-state">Could not load projects. Is the API running on port 5000?</div>';
+        }
+      })();
+    </script>
+  </body>
+</html>

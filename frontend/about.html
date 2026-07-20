@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="About — full-stack developer focused on Web3, fintech, and e-commerce products."
+    />
+    <title>About · Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <a class="logo" href="index.html">oj<span>.</span>dev</a>
+        <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false">
+          <span></span>
+        </button>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html" data-nav="home">Home</a>
+          <a href="about.html" data-nav="about">About</a>
+          <a href="work.html" data-nav="work">Work</a>
+          <a href="contact.html" data-nav="contact" class="btn btn-primary btn-sm nav-cta">Hire me</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <div class="container">
+          <p class="section-eyebrow">About</p>
+          <h1>Engineer. Builder. Problem-solver.</h1>
+          <p>
+            I turn fuzzy product ideas into reliable software — with a bias for clean APIs,
+            sharp UI, and systems that hold up under real users.
+          </p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container about-grid">
+          <div class="prose reveal">
+            <!-- Put your photo here: frontend/assets/profile.jpg (same file as Home) -->
+            <div class="portrait portrait-about">
+              <img
+                src="assets/profile.jpg"
+                alt="Portrait of the developer"
+                width="640"
+                height="800"
+                loading="lazy"
+              />
+            </div>
+            <p>
+              I’m a full-stack developer specializing in <strong>Web3</strong>,
+              <strong>fintech</strong>, and <strong>e-commerce</strong>. My work sits at the
+              intersection of product thinking and solid engineering: clear data models,
+              secure auth, thoughtful UX, and deployable backends.
+            </p>
+            <p>
+              Whether it’s a DeFi dashboard, a lending flow, or a utility SaaS, I care about
+              the details that make software feel intentional — loading states, empty states,
+              error paths, and the boring reliability work that keeps things online.
+            </p>
+            <p>
+              I studied Computer Science at
+              <strong>Precious Cornerstone University</strong>, and I keep shipping side
+              projects and client work that stretch the stack: Node, MongoDB, modern frontends,
+              and on-chain integrations when the product needs them.
+            </p>
+            <div class="hero-actions mt-3">
+              <a class="btn btn-primary" href="assets/resume.pdf" download>Download resume</a>
+              <a class="btn btn-ghost" href="contact.html">Get in touch</a>
+            </div>
+          </div>
+
+          <aside class="reveal">
+            <div class="info-card mb-2">
+              <h3>Focus areas</h3>
+              <ul>
+                <li>Web3 / DeFi product interfaces</li>
+                <li>Fintech & payment-adjacent flows</li>
+                <li>REST APIs & admin tooling</li>
+                <li>E-commerce & utility platforms</li>
+              </ul>
+            </div>
+            <div class="info-card">
+              <h3>Core stack</h3>
+              <ul>
+                <li>JavaScript / TypeScript</li>
+                <li>Node.js, Express, MongoDB</li>
+                <li>React & vanilla JS when lean</li>
+                <li>Solidity, Ethers, Cloudinary</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" style="padding-top: 0">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="section-eyebrow">Journey</p>
+            <h2 class="section-title">Path so far</h2>
+          </div>
+          <div class="timeline reveal">
+            <article class="timeline-item">
+              <p class="meta">Education</p>
+              <h3>B.Sc. Computer Science</h3>
+              <p>Precious Cornerstone University — foundations in software, systems, and problem decomposition.</p>
+            </article>
+            <article class="timeline-item">
+              <p class="meta">Craft</p>
+              <h3>Full-stack product work</h3>
+              <p>
+                Shipping end-to-end apps: auth, CRUD, file uploads, email notifications, and
+                admin panels that non-engineers can actually use.
+              </p>
+            </article>
+            <article class="timeline-item">
+              <p class="meta">Frontier</p>
+              <h3>Web3 & fintech</h3>
+              <p>
+                Exploring on-chain integrations, wallet-aware UX, and money-adjacent flows where
+                correctness and trust matter most.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" style="padding-top: 0">
+        <div class="container">
+          <div class="cta-band reveal">
+            <h2>Want to build something together?</h2>
+            <p>I’m open to freelance and contract work. Share a bit about your project.</p>
+            <a class="btn btn-primary" href="contact.html">Contact me</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="y"></span> Portfolio. Built with intent.</p>
+        <div class="footer-links">
+          <a href="about.html">About</a>
+          <a href="work.html">Work</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      document.getElementById('y').textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Projects · Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/admin.css" />
+  </head>
+  <body class="admin">
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <a class="admin-brand" href="dashboard.html">oj<span>.</span>admin</a>
+        <nav class="admin-nav">
+          <a href="dashboard.html">Dashboard</a>
+          <a href="projects.html" class="active">Projects</a>
+          <a href="messages.html">Messages</a>
+        </nav>
+        <button type="button" class="btn btn-ghost btn-sm logout-btn" id="logout">Log out</button>
+      </aside>
+
+      <div class="admin-main">
+        <div class="container">
+          <div class="admin-top">
+            <div>
+              <h1>Projects</h1>
+              <p>Create, edit, feature, and upload images via Cloudinary.</p>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-new">New project</button>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h2>All work</h2></div>
+            <div class="table-wrap">
+              <table class="data">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Tags</th>
+                    <th>Featured</th>
+                    <th>Updated</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="rows">
+                  <tr><td colspan="5" class="text-muted">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal">
+        <header>
+          <h2 id="modal-title">Project</h2>
+          <button type="button" class="close-btn" id="modal-close" aria-label="Close">✕</button>
+        </header>
+        <form id="project-form">
+          <input type="hidden" id="p-id" />
+          <div class="field">
+            <label for="p-title">Title</label>
+            <input id="p-title" required maxlength="120" />
+          </div>
+          <div class="field mt-2">
+            <label for="p-desc">Description</label>
+            <textarea id="p-desc" required></textarea>
+          </div>
+          <div class="form-grid two mt-2">
+            <div class="field">
+              <label for="p-tags">Tags (comma-separated)</label>
+              <input id="p-tags" placeholder="Web3, DeFi" />
+            </div>
+            <div class="field">
+              <label for="p-stack">Tech stack (comma-separated)</label>
+              <input id="p-stack" placeholder="Node, MongoDB" />
+            </div>
+          </div>
+          <div class="form-grid two mt-2">
+            <div class="field">
+              <label for="p-live">Live URL</label>
+              <input id="p-live" type="url" placeholder="https://" />
+            </div>
+            <div class="field">
+              <label for="p-gh">GitHub URL</label>
+              <input id="p-gh" type="url" placeholder="https://" />
+            </div>
+          </div>
+          <div class="check-row mt-2">
+            <input type="checkbox" id="p-featured" />
+            <label for="p-featured">Featured on home</label>
+          </div>
+          <div class="field mt-2">
+            <label for="p-image">Upload image</label>
+            <input id="p-image" type="file" accept="image/*" />
+            <p class="hint">Images go to Cloudinary. Max 5MB.</p>
+            <div class="thumb-row" id="thumbs"></div>
+          </div>
+          <div class="mt-2" style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+            <button type="submit" class="btn btn-primary" id="save-btn">Save</button>
+            <button type="button" class="btn btn-ghost" id="modal-cancel">Cancel</button>
+          </div>
+          <div id="form-status" class="form-status" role="status"></div>
+        </form>
+      </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/admin.js"></script>
+    <script>
+      const token = adminAuth.requireAuth();
+      document.getElementById('logout').addEventListener('click', () => adminAuth.logout());
+
+      const rows = document.getElementById('rows');
+      const modal = document.getElementById('modal');
+      const form = document.getElementById('project-form');
+      const statusEl = document.getElementById('form-status');
+      const thumbs = document.getElementById('thumbs');
+      let imageUrls = [];
+
+      function openModal(project) {
+        statusEl.className = 'form-status';
+        form.reset();
+        imageUrls = project && project.images ? [...project.images] : [];
+        document.getElementById('modal-title').textContent = project ? 'Edit project' : 'New project';
+        document.getElementById('p-id').value = project ? project._id : '';
+        document.getElementById('p-title').value = project ? project.title : '';
+        document.getElementById('p-desc').value = project ? project.description : '';
+        document.getElementById('p-tags').value = project ? (project.tags || []).join(', ') : '';
+        document.getElementById('p-stack').value = project ? (project.techStack || []).join(', ') : '';
+        document.getElementById('p-live').value = project ? project.liveUrl || '' : '';
+        document.getElementById('p-gh').value = project ? project.githubUrl || '' : '';
+        document.getElementById('p-featured').checked = project ? !!project.featured : false;
+        renderThumbs();
+        modal.classList.add('open');
+      }
+
+      function closeModal() {
+        modal.classList.remove('open');
+      }
+
+      function renderThumbs() {
+        thumbs.innerHTML = imageUrls
+          .map(
+            (url, i) => `
+          <div class="thumb">
+            <img src="${ui.escapeHtml(url)}" alt="" />
+            <button type="button" data-i="${i}" aria-label="Remove">×</button>
+          </div>`
+          )
+          .join('');
+      }
+
+      thumbs.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-i]');
+        if (!btn) return;
+        imageUrls.splice(Number(btn.dataset.i), 1);
+        renderThumbs();
+      });
+
+      document.getElementById('btn-new').addEventListener('click', () => openModal(null));
+      document.getElementById('modal-close').addEventListener('click', closeModal);
+      document.getElementById('modal-cancel').addEventListener('click', closeModal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      document.getElementById('p-image').addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        statusEl.className = 'form-status show';
+        statusEl.textContent = 'Uploading…';
+        statusEl.classList.add('ok');
+        try {
+          const res = await api.uploadImage(file, token);
+          imageUrls.push(res.url);
+          renderThumbs();
+          ui.showStatus(statusEl, 'ok', 'Image uploaded.');
+        } catch (err) {
+          ui.showStatus(statusEl, 'err', err.message || 'Upload failed');
+        }
+        e.target.value = '';
+      });
+
+      function parseList(str) {
+        return String(str || '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('p-id').value;
+        const body = {
+          title: document.getElementById('p-title').value.trim(),
+          description: document.getElementById('p-desc').value.trim(),
+          tags: parseList(document.getElementById('p-tags').value),
+          techStack: parseList(document.getElementById('p-stack').value),
+          liveUrl: document.getElementById('p-live').value.trim(),
+          githubUrl: document.getElementById('p-gh').value.trim(),
+          featured: document.getElementById('p-featured').checked,
+          images: imageUrls,
+        };
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.disabled = true;
+        try {
+          if (id) await api.updateProject(id, body, token);
+          else await api.createProject(body, token);
+          closeModal();
+          await loadProjects();
+        } catch (err) {
+          if (err.status === 401) return adminAuth.logout();
+          ui.showStatus(statusEl, 'err', err.message || 'Save failed');
+        } finally {
+          saveBtn.disabled = false;
+        }
+      });
+
+      async function loadProjects() {
+        try {
+          const { projects } = await api.getProjects();
+          if (!projects.length) {
+            rows.innerHTML = '<tr><td colspan="5" class="text-muted">No projects yet.</td></tr>';
+            return;
+          }
+          rows.innerHTML = projects
+            .map((p) => {
+              const tags = (p.tags || []).slice(0, 3).map((t) => ui.escapeHtml(t)).join(', ');
+              return `<tr>
+                <td><strong>${ui.escapeHtml(p.title)}</strong></td>
+                <td class="text-muted">${tags || '—'}</td>
+                <td>${p.featured ? '<span class="badge new">yes</span>' : '—'}</td>
+                <td class="text-dim mono" style="font-size:0.8rem">${adminAuth.fmtDate(p.updatedAt || p.createdAt)}</td>
+                <td>
+                  <div class="row-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" data-edit="${p._id}">Edit</button>
+                    <button type="button" class="btn btn-danger btn-sm" data-del="${p._id}">Delete</button>
+                  </div>
+                </td>
+              </tr>`;
+            })
+            .join('');
+
+          rows.querySelectorAll('[data-edit]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+              const p = projects.find((x) => x._id === btn.dataset.edit);
+              if (p) openModal(p);
+            });
+          });
+          rows.querySelectorAll('[data-del]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+              if (!confirm('Delete this project?')) return;
+              try {
+                await api.deleteProject(btn.dataset.del, token);
+                await loadProjects();
+              } catch (err) {
+                if (err.status === 401) return adminAuth.logout();
+                alert(err.message || 'Delete failed');
+              }
+            });
+          });
+        } catch (err) {
+          if (err.status === 401) return adminAuth.logout();
+          rows.innerHTML = `<tr><td colspan="5" class="error-state">${ui.escapeHtml(err.message)}</td></tr>`;
+        }
+      }
+
+      loadProjects();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Dashboard · Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/admin.css" />
+  </head>
+  <body class="admin">
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <a class="admin-brand" href="dashboard.html">oj<span>.</span>admin</a>
+        <nav class="admin-nav">
+          <a href="dashboard.html" class="active">Dashboard</a>
+          <a href="projects.html">Projects</a>
+          <a href="messages.html">Messages</a>
+        </nav>
+        <button type="button" class="btn btn-ghost btn-sm logout-btn" id="logout">Log out</button>
+      </aside>
+
+      <div class="admin-main">
+        <div class="container">
+          <div class="admin-top">
+            <div>
+              <h1>Dashboard</h1>
+              <p id="welcome">Loading…</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+              <a class="btn btn-ghost btn-sm" href="projects.html">Manage work</a>
+              <a class="btn btn-primary btn-sm" href="messages.html">View requests</a>
+            </div>
+          </div>
+
+          <div id="stats" class="stat-grid">
+            <div class="stat-card"><div class="label">Projects</div><div class="value">—</div></div>
+            <div class="stat-card"><div class="label">Featured</div><div class="value">—</div></div>
+            <div class="stat-card"><div class="label">Messages</div><div class="value">—</div></div>
+            <div class="stat-card"><div class="label">New</div><div class="value accent">—</div></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h2>Quick links</h2>
+            </div>
+            <div style="padding: 1.15rem; color: var(--text-muted); font-size: 0.925rem">
+              <p>Use <strong style="color: var(--text)">Projects</strong> to create, edit, feature, and upload images.</p>
+              <p class="mt-1">Use <strong style="color: var(--text)">Messages</strong> to triage hire requests and update status.</p>
+              <p class="mt-1 text-dim">Public site is not linked here on purpose.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/main.js"></script>
+    <script src="../js/admin.js"></script>
+    <script>
+      const token = adminAuth.requireAuth();
+      document.getElementById('logout').addEventListener('click', () => adminAuth.logout());
+
+      const user = adminAuth.getUser();
+      document.getElementById('welcome').textContent = user
+        ? `Signed in as ${user.username}`
+        : 'Signed in';
+
+      (async function load() {
+        try {
+          const { stats } = await api.getStats(token);
+          const el = document.getElementById('stats');
+          el.innerHTML = `
+            <div class="stat-card"><div class="label">Projects</div><div class="value">${stats.totalProjects}</div></div>
+            <div class="stat-card"><div class="label">Featured</div><div class="value">${stats.featuredProjects}</div></div>
+            <div class="stat-card"><div class="label">Messages</div><div class="value">${stats.totalMessages}</div></div>
+            <div class="stat-card"><div class="label">New</div><div class="value accent">${stats.newMessages}</div></div>
+            <div class="stat-card"><div class="label">In review</div><div class="value">${stats.inReview}</div></div>
+          `;
+        } catch (err) {
+          if (err.status === 401) return adminAuth.logout();
+          document.getElementById('stats').innerHTML =
+            `<div class="error-state" style="grid-column:1/-1">${ui.escapeHtml(err.message)}</div>`;
+        }
+      })();
+    </script>
+  </body>
+</html>

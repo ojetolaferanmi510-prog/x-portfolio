@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Project detail — portfolio case study." />
+    <title>Project · Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container nav">
+        <a class="logo" href="index.html">oj<span>.</span>dev</a>
+        <button class="nav-toggle" type="button" aria-label="Menu" aria-expanded="false">
+          <span></span>
+        </button>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="index.html" data-nav="home">Home</a>
+          <a href="about.html" data-nav="about">About</a>
+          <a href="work.html" data-nav="work">Work</a>
+          <a href="contact.html" data-nav="contact" class="btn btn-primary btn-sm nav-cta">Hire me</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div id="project-root">
+        <div class="container" style="padding: 4rem 0">
+          <div class="loading-state">Loading project…</div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>© <span id="y"></span> Portfolio. Built with intent.</p>
+        <div class="footer-links">
+          <a href="about.html">About</a>
+          <a href="work.html">Work</a>
+          <a href="contact.html">Contact</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+    <script>
+      document.getElementById('y').textContent = new Date().getFullYear();
+
+      const root = document.getElementById('project-root');
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+
+      function render(p) {
+        document.title = `${p.title} · Portfolio`;
+        const tags = (p.tags || [])
+          .map((t) => `<span class="tag">${ui.escapeHtml(t)}</span>`)
+          .join('');
+        const stack = (p.techStack || [])
+          .map((t) => `<span class="tag muted">${ui.escapeHtml(t)}</span>`)
+          .join('');
+
+        const images = p.images && p.images.length
+          ? p.images
+              .map(
+                (src) =>
+                  `<img src="${ui.escapeHtml(src)}" alt="${ui.escapeHtml(
+                    p.title
+                  )}" loading="lazy" />`
+              )
+              .join('')
+          : '<div class="ph">No images yet</div>';
+
+        const live = p.liveUrl
+          ? `<a class="btn btn-primary btn-sm" href="${ui.escapeHtml(
+              p.liveUrl
+            )}" target="_blank" rel="noopener noreferrer">Live site</a>`
+          : '';
+        const gh = p.githubUrl
+          ? `<a class="btn btn-ghost btn-sm" href="${ui.escapeHtml(
+              p.githubUrl
+            )}" target="_blank" rel="noopener noreferrer">GitHub</a>`
+          : '';
+
+        const created = p.createdAt
+          ? new Date(p.createdAt).toLocaleDateString(undefined, {
+              year: 'numeric',
+              month: 'short',
+            })
+          : '';
+
+        root.innerHTML = `
+          <section class="work-hero">
+            <div class="container">
+              <a class="back" href="work.html">← Back to work</a>
+              <div class="tag-row">${tags}</div>
+              <h1>${ui.escapeHtml(p.title)}</h1>
+              <div class="work-meta">
+                ${created ? `<span class="mono">${ui.escapeHtml(created)}</span>` : ''}
+                ${p.featured ? '<span class="tag">Featured</span>' : ''}
+              </div>
+              <div class="work-actions">${live}${gh}</div>
+            </div>
+          </section>
+          <section class="section" style="padding-top: 0">
+            <div class="container">
+              <div class="work-gallery">${images}</div>
+              <div class="work-body">
+                <div class="prose">
+                  <p class="section-eyebrow">Overview</p>
+                  <div style="white-space: pre-wrap; color: var(--text-muted)">${ui.escapeHtml(
+                    p.description || ''
+                  )}</div>
+                </div>
+                <aside class="work-sidebar">
+                  <div class="info-card">
+                    <h3>Tech stack</h3>
+                    <div class="tag-row mt-1">${stack || '<span class="text-dim">—</span>'}</div>
+                  </div>
+                  <div class="info-card">
+                    <h3>Links</h3>
+                    <ul>
+                      ${
+                        p.liveUrl
+                          ? `<li><a href="${ui.escapeHtml(
+                              p.liveUrl
+                            )}" target="_blank" rel="noopener noreferrer">Live deployment</a></li>`
+                          : ''
+                      }
+                      ${
+                        p.githubUrl
+                          ? `<li><a href="${ui.escapeHtml(
+                              p.githubUrl
+                            )}" target="_blank" rel="noopener noreferrer">Source code</a></li>`
+                          : ''
+                      }
+                      ${!p.liveUrl && !p.githubUrl ? '<li>No public links</li>' : ''}
+                    </ul>
+                  </div>
+                </aside>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      (async function init() {
+        if (!id) {
+          root.innerHTML =
+            '<div class="container" style="padding:4rem 0"><div class="error-state">Missing project id. <a href="work.html">Back to work</a></div></div>';
+          return;
+        }
+        try {
+          const { project } = await api.getProject(id);
+          render(project);
+        } catch (err) {
+          console.error(err);
+          root.innerHTML = `<div class="container" style="padding:4rem 0"><div class="error-state">${
+            err.status === 404
+              ? 'Project not found.'
+              : 'Could not load project.'
+          } <a href="work.html">Back to work</a></div></div>`;
+        }
+      })();
+    </script>
+  </body>
+</html>
